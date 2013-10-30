@@ -28,7 +28,7 @@ typedef void (*GL_FUNC_PTR)();
 static GL_FUNC_PTR getGLFuncAddress(const char *funcName) {
     GL_FUNC_PTR ret = NULL;
 #ifdef __linux__
-    static osUtils::dynLibrary* libGL = osUtils::dynLibrary::open("libGL.so");
+    static osUtils::dynLibrary* libGL = osUtils::dynLibrary::open("libGL.so.1");
     ret = (GL_FUNC_PTR)glXGetProcAddress((const GLubyte*)funcName);
 #elif defined(WIN32)
     static osUtils::dynLibrary* libGL = osUtils::dynLibrary::open("opengl32");
