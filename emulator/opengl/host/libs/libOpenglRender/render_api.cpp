@@ -70,8 +70,14 @@ int initLibrary(void)
         return false;
     }
 
-    /* failure to init the GLES2 dispatch table is not fatal */
-    init_gl2_dispatch();
+    //
+    // Load GLES2 Plugin: needed for Ubuntu Touch
+    //
+    if (!init_gl2_dispatch()) {
+        // Failed to load GLES2
+        ERR("Failed to init_gl2_dispatch\n");
+        return false;
+    }
 
     return true;
 }
