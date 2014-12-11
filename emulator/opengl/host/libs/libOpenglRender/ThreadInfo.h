@@ -21,6 +21,8 @@
 #include "GLDecoder.h"
 #include "GL2Decoder.h"
 
+#include <list>
+
 struct RenderThreadInfo
 {
     RenderThreadInfo();
@@ -32,6 +34,9 @@ struct RenderThreadInfo
     WindowSurfacePtr currReadSurf;
     GLDecoder        m_glDec;
     GL2Decoder       m_gl2Dec;
+
+    std::list<HandleType> m_windows;
+    std::list<HandleType> m_contexts;
 };
 
 #endif
