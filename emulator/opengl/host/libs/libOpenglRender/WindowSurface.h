@@ -24,6 +24,8 @@
 #include <EGL/egl.h>
 #include <GLES/gl.h>
 
+typedef uint32_t HandleType;
+
 enum SurfaceBindType {
     SURFACE_BIND_READ,
     SURFACE_BIND_DRAW,

@@ -150,9 +150,10 @@ int RenderThread::Main()
     }
 
     //
-    // Release references to the current thread's context/surfaces if any
+    // Unregister this thread from the FB controller and release any associated resources
+    // also unbind any active context/surfaces before terminating
     //
-    FrameBuffer::getFB()->bindContext(0, 0, 0);
+    FrameBuffer::getFB()->finishClient();
     if (tInfo.currContext || tInfo.currDrawSurf || tInfo.currReadSurf) {
         fprintf(stderr, "ERROR: RenderThread exiting with current context/surfaces\n");
     }
