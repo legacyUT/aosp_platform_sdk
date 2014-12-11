@@ -31,6 +31,7 @@ Thread::Thread() :
 
 Thread::~Thread()
 {
+    pthread_detach(m_thread);
     pthread_mutex_destroy(&m_lock);
 }
 

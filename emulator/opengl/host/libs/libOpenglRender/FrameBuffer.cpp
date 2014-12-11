@@ -521,6 +521,8 @@ HandleType FrameBuffer::createRenderContext(int p_config, HandleType p_share,
     if (rctx.Ptr() != NULL) {
         ret = genHandle();
         m_contexts[ret] = rctx;
+        RenderThreadInfo *tinfo = RenderThreadInfo::get();
+        tinfo->m_contexts.push_back(ret);
     }
     return ret;
 }
@@ -534,6 +536,8 @@ HandleType FrameBuffer::createWindowSurface(int p_config, int p_width, int p_hei
     if (win.Ptr() != NULL) {
         ret = genHandle();
         m_windows[ret] = win;
+        RenderThreadInfo *tinfo = RenderThreadInfo::get();
+        tinfo->m_windows.push_back(ret);
     }
 
     return ret;
@@ -542,12 +546,18 @@ HandleType FrameBuffer::createWindowSurface(int p_config, int p_width, int p_hei
 void FrameBuffer::DestroyRenderContext(HandleType p_context)
 {
     emugl::Mutex::AutoLock mutex(m_lock);
+
+    RenderThreadInfo *tinfo = RenderThreadInfo::get();
+    tinfo->m_contexts.remove(p_context);
     m_contexts.erase(p_context);
 }
 
 void FrameBuffer::DestroyWindowSurface(HandleType p_surface)
 {
     emugl::Mutex::AutoLock mutex(m_lock);
+
+    RenderThreadInfo *tinfo = RenderThreadInfo::get();
+    tinfo->m_windows.remove(p_surface);
     m_windows.erase(p_surface);
 }
 
@@ -659,12 +669,37 @@ bool FrameBuffer::bindColorBufferToRenderbuffer(HandleType p_colorbuffer)
     return (*c).second.cb->bindToRenderbuffer();
 }
 
+bool FrameBuffer::finishClient()
+{
+    android::Mutex::Autolock mutex(m_lock);
+
+    // Release all resources for client RenderThread
+    RenderThreadInfo *tinfo = RenderThreadInfo::get();
+
+    for (std::list<HandleType>::iterator it=tinfo->m_windows.begin(); it != tinfo->m_windows.end(); ++it)
+        m_windows.erase(*it);
+    tinfo->m_windows.clear();
+
+    for (std::list<HandleType>::iterator it=tinfo->m_contexts.begin(); it != tinfo->m_contexts.end(); ++it)
+        m_contexts.erase(*it);
+    tinfo->m_contexts.clear();
+
+    // Unbind all contexts/surfaces
+    return bindContext_locked(0, 0, 0);
+}
+
 bool FrameBuffer::bindContext(HandleType p_context,
                               HandleType p_drawSurface,
                               HandleType p_readSurface)
 {
     emugl::Mutex::AutoLock mutex(m_lock);
+    return bindContext_locked(p_context, p_drawSurface, p_readSurface);
+}
 
+bool FrameBuffer::bindContext_locked(HandleType p_context,
+                                     HandleType p_drawSurface,
+                                     HandleType p_readSurface)
+{
     WindowSurfacePtr draw(NULL), read(NULL);
     RenderContextPtr ctx(NULL);
 
